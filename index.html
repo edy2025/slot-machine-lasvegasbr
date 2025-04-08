@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slot Machine - Las Vegas</title>
+  <style>
+    body {
+      background: url('https://images.unsplash.com/photo-1516035069371-29a1b244cc32') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Arial', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .slot-machine {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #ffd700;
+      text-align: center;
+    }
+
+    .reels {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .reel {
+      background: #222;
+      border: 4px solid #ffd700;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 0 10px;
+      font-size: 2rem;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.5s ease;
+    }
+
+    .reel.spin {
+      transform: rotate(360deg);
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      background: #ffd700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    .balance {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="slot-machine">
+    <div class="balance">Saldo: <span id="balance">0</span> moedas</div>
+    <div class="reels">
+      <div class="reel" id="reel1">🍒</div>
+      <div class="reel" id="reel2">🍋</div>
+      <div class="reel" id="reel3">🍊</div>
+    </div>
+    <button onclick="spin()">GIRAR 🎰</button>
+    <button onclick="buyCoins()">Comprar 100 moedas - R$1,99 💳</button>
+  </div>
+
+  <audio id="spin-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-casino-win-1932.mp3"></audio>
+  <audio id="jackpot-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-notification-2018.mp3"></audio>
+
+  <script>
+    const symbols = ['🍒', '🍋', '🍊', '⭐', '💎'];
+    let balance = 0;
+
+    if (localStorage.getItem('balance')) {
+      balance = parseInt(localStorage.getItem('balance'));
+    } else {
+      balance = 100;
+    }
+    document.getElementById('balance').textContent = balance;
+
+    function spin() {
+      if (balance < 10) {
+        alert('Saldo insuficiente!');
+        return;
+      }
+
+      document.getElementById('spin-sound').play();
+      balance -= 10;
+
+      const r1 = symbols[Math.floor(Math.random() * symbols.length)];
+      const r2 = symbols[Math.floor(Math.random() * symbols.length)];
+      const r3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+      const reels = [
+        document.getElementById('reel1'),
+        document.getElementById('reel2'),
+        document.getElementById('reel3')
+      ];
+
+      reels.forEach(reel => {
+        reel.classList.add('spin');
+        setTimeout(() => reel.classList.remove('spin'), 500);
+      });
+
+      setTimeout(() => {
+        reels[0].textContent = r1;
+        reels[1].textContent = r2;
+        reels[2].textContent = r3;
+
+        if (r1 === r2 && r2 === r3) {
+          balance += 100;
+          document.getElementById('jackpot-sound').play();
+          alert('JACKPOT! Você ganhou 100 moedas!');
+        } else if (r1 === r2 || r2 === r3 || r1 === r3) {
+          balance += 20;
+          alert('Boa! Você ganhou 20 moedas!');
+        }
+
+        document.getElementById('balance').textContent = balance;
+        localStorage.setItem('balance', balance);
+      }, 500);
+    }
+
+    async function buyCoins() {
+      const response = await fetch('https://seu-backend.com/pagar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+
+      const data = await response.json();
+
+      if (data && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Erro ao iniciar pagamento.');
+      }
+    }
+  </script>
+</body>
+</html>
